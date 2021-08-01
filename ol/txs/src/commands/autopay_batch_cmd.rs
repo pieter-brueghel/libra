@@ -12,7 +12,7 @@ use crate::{
 };
 use dialoguer::Confirm;
 use std::path::PathBuf;
-use ol_types::{autopay::PayInstruction, config::{TxType, IS_CI}};
+use ol_types::{pay_instruction::PayInstruction, config::{TxType, IS_TEST}};
 
 /// command to submit a batch of autopay tx from file
 #[derive(Command, Debug, Default, Options)]

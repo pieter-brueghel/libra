@@ -441,7 +441,7 @@ pub struct MetadataView {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct BytesView(Box<[u8]>);
+pub struct BytesView(pub Box<[u8]>); /////// 0L /////////
 
 impl BytesView {
     pub fn new<T: Into<Box<[u8]>>>(bytes: T) -> Self {

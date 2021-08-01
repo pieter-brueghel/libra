@@ -6,11 +6,13 @@ use std::{thread, time::Duration};
 use chrono::Utc;
 
 /// Start the node monitor
-pub fn run_checks(mut node: &mut Node, pilot: bool, is_live: bool, verbose_check: bool, verbose_pilot: bool) {
-    
-    if pilot {
-        pilot::maybe_restore_db(&mut node, verbose_pilot);
-    }
+pub fn run_checks(
+    mut node: &mut Node,
+    pilot: bool,
+    is_live: bool,
+    verbose_check: bool,
+    verbose_pilot: bool
+) {
     loop {
         // update all the checks
         node.check_once(verbose_check);
@@ -29,7 +31,7 @@ pub fn run_checks(mut node: &mut Node, pilot: bool, is_live: bool, verbose_check
 impl Node {
   /// Run healtchecks once
   pub fn check_once(&mut self, verbose: bool) -> &mut Self {
-      let home_path = self.conf.workspace.node_home.clone();
+      let home_path = self.app_conf.workspace.node_home.clone();
 
       &self.refresh_onchain_state();
       &self.refresh_chain_info();
@@ -48,8 +50,8 @@ impl Node {
 fn print_it(node: &Node) {
     println!(
 "
+{now}\n
 HEALTH\n...........................\n
-{now}
 Configs exist: {configs}
 DB restored: {restored}
 Web monitor: {web_running}

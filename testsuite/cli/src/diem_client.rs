@@ -1,7 +1,7 @@
 // Copyright (c) The Diem Core Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{bail, ensure, Result};
+use anyhow::{bail, ensure, Error, Result};
 use diem_client::{
     views, 
     views::{MinerStateResourceView, OracleUpgradeStateView},
@@ -209,22 +209,13 @@ impl DiemClient {
 
     //////// 0L ////////
     /// generate latest waypoint
-    pub fn waypoint(&self)->Option<Waypoint> {
-        let latest_epoch_change_li = match self.latest_epoch_change_li() {
-            Some(li) => li,
-            None => {
-                // println!("No epoch change LedgerInfo found");
-                return None;
-            }
-        };
-
-        match Waypoint::new_epoch_boundary(latest_epoch_change_li.ledger_info()) {
-          Ok(waypoint) => Some(waypoint),  
-          Err(_) => {
-                // println!("Failed to generate a waypoint: {}", e);
-                None
+    /// generate latest waypoint
+    pub fn waypoint(&self) -> Result<Waypoint, Error> {
+        match self.latest_epoch_change_li() {
+            Some(li) => {
+              Waypoint::new_epoch_boundary(li.ledger_info())
             },
-            
+            None => Err(Error::msg("No epoch change LedgerInfo found"))
         }
     }
 

@@ -1,6 +1,5 @@
 //! `monitor-cmd` subcommand
 
-use crate::config::AppCfg;
 use crate::explorer::{ui, App};
 use crate::{
     application::app_config,
@@ -35,28 +34,16 @@ pub struct ExplorerCMD {
 impl Runnable for ExplorerCMD {
     /// Start the application.
     fn run(&self) {
+    
+        let args = entrypoint::get_args();
+        let is_swarm = *&args.swarm_path.is_some();
+        let mut cfg = app_config().clone();
+        let client = client::pick_client(args.swarm_path, &mut cfg).unwrap();
+        let mut node = Node::new(client, cfg, is_swarm);
 
         if *&self.pilot {
-          let mut conf = match entrypoint::get_args().swarm_path {
-              Some(sp) => AppCfg::init_app_configs_swarm(sp.clone(), sp.join("0")),
-              None => app_config().to_owned(),
-          };
-          let client = client::pick_client(entrypoint::get_args().swarm_path, &mut conf)
-              .unwrap()
-              .0;
-          let mut node = Node::new(client, conf);
           node.start_pilot(false);
         }
-
-        let args = entrypoint::get_args();
-
-        let mut cfg = match args.swarm_path.clone() {
-            Some(sp) => AppCfg::init_app_configs_swarm(sp.clone(), sp.join("0")),
-            None => app_config().to_owned(),
-        };
-
-        let client = client::pick_client(args.swarm_path, &mut cfg).unwrap().0;
-        let node = Node::new(client, cfg);
 
         let mut app = App::new(" Console ", self.enhanced_graphics, node);
         app.fetch();
@@ -83,6 +70,12 @@ impl Runnable for ExplorerCMD {
 
             match events.next().unwrap() {
                 Event::Input(key) => match key {
+                    Key::Ctrl(c) => {
+                        if c == 'c' {
+                            app.should_quit = true;
+                            break;
+                        }
+                    }
                     Key::Char(character) => {
                         app.on_key(character);
                     }

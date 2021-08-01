@@ -83,7 +83,7 @@
     {
       id: "node",
       title: "Node is running",
-      description: "process `libra-node` has started",
+      description: "process `diem-node` has started",
       is_true: false,
     },
     {

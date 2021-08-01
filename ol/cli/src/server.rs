@@ -11,7 +11,7 @@ use crate::{cache::Vitals, check::runner, node::node::Node};
 #[tokio::main]
 /// starts the web server
 pub async fn start_server(mut node: Node, run_checks: bool) {
-    let cfg = node.conf.clone();
+    let cfg = node.app_conf.clone();
 
     if run_checks {
         thread::spawn(move || {
@@ -73,6 +73,18 @@ pub async fn start_server(mut node: Node, run_checks: bool) {
     )
     .run(([0, 0, 0, 0], 3030))
     .await;
+}
+
+/// Prepare to start server
+pub fn init(node: &mut Node, run_checks: bool) {
+    if run_checks { 
+        /*
+            Initialize cache to avoid:
+            - read a cache file not created yet
+            - load old cache with invalid structs
+        */          
+        node.check_once(false);
+    }
 }
 
 fn sse_vitals(data: Vitals) -> Result<impl ServerSentEvent, Infallible> {
