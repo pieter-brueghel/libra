@@ -54,9 +54,9 @@ impl Runnable for StartCmd {
 
         let waypoint = if waypoint.is_none() {
             match cfg.get_waypoint(None) {
-                Some(w) => Some(w),
-                _ => {
-                    status_err!("Cannot start without waypoint, exiting");
+                Ok(w) => Some(w),
+                Err(e) => {
+                    status_err!("Cannot start without waypoint. Message: {:?}", e);
                     std::process::exit(-1);
                 }
             }
@@ -75,9 +75,16 @@ impl Runnable for StartCmd {
 
         // Check for, and submit backlog proofs.
         if !self.skip_backlog {
-          // TODO: remove is_operator from signature, since tx_params has it.
-            backlog::process_backlog(&cfg, &tx_params, is_operator);
+            // TODO: remove is_operator from signature, since tx_params has it.
+            match backlog::process_backlog(&cfg, &tx_params, is_operator) {
+                Ok(()) => status_ok!("Backlog:", "backlog committed to chain"),
+                Err(e) => {
+                    println!("Failed fetching remote state: {}", e);
+                }
+            }
         }
+
+        println!("url: {}", tx_params.url.clone());
 
         if !self.backlog_only {
             // Steady state.

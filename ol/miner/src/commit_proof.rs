@@ -4,7 +4,6 @@ use anyhow::Error;
 use cli::{diem_client::DiemClient, AccountData, AccountStatus};
 use txs::{sign_tx::sign_tx, submit_tx::{TxParams, submit_tx}};
 use diem_json_rpc_types::views::{TransactionView};
-use diem_types::chain_id::ChainId;
 use diem_transaction_builder::stdlib as transaction_builder;
 
 /// Submit a miner transaction to the network.
@@ -18,10 +17,10 @@ pub fn commit_proof_tx(
     // Create a client object
     let client = DiemClient::new(tx_params.url.clone(), tx_params.waypoint).unwrap();
 
-    let chain_id = ChainId::new(client.get_metadata().unwrap().chain_id);
+    let chain_id = tx_params.chain_id;
 
     // For sequence number
-    let account_state = client.get_account(&tx_params.signer_address).unwrap();
+    let account_state = client.get_account(&tx_params.signer_address)?;
     let sequence_number = match account_state {
         Some(av) => av.sequence_number,
         None => 0,
