@@ -19,7 +19,7 @@
 
 
 
-<pre><code><b>fun</b> <a href="ol_wallet.md#0x1_WalletScripts_set_wallet_type">set_wallet_type</a>(sender: signer, type_of: u8)
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="ol_wallet.md#0x1_WalletScripts_set_wallet_type">set_wallet_type</a>(sender: signer, type_of: u8)
 </code></pre>
 
 
@@ -28,7 +28,7 @@
 <summary>Implementation</summary>
 
 
-<pre><code><b>fun</b> <a href="ol_wallet.md#0x1_WalletScripts_set_wallet_type">set_wallet_type</a>(sender: signer, type_of: u8) {
+<pre><code><b>public</b>(<b>script</b>) <b>fun</b> <a href="ol_wallet.md#0x1_WalletScripts_set_wallet_type">set_wallet_type</a>(sender: signer, type_of: u8) {
   <b>if</b> (type_of == 0) {
     <a href="Wallet.md#0x1_Wallet_set_slow">Wallet::set_slow</a>(&sender);
   };

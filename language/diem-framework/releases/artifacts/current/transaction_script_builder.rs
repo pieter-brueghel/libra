@@ -2815,6 +2815,10 @@ pub enum ScriptFunctionCall {
         operator_account: AccountAddress,
     },
 
+    SetWalletType {
+        type_of: u8,
+    },
+
     /// # Summary
     /// Mints a specified number of coins in a currency to a Designated Dealer. The sending account
     /// must be the Treasury Compliance account, and coins can only be minted to a Designated Dealer
@@ -3607,6 +3611,7 @@ impl ScriptFunctionCall {
                 operator_name,
                 operator_account,
             ),
+            SetWalletType { type_of } => encode_set_wallet_type_script_function(type_of),
             TieredMint {
                 coin_type,
                 sliding_nonce,
@@ -5577,6 +5582,18 @@ pub fn encode_set_validator_operator_with_nonce_admin_script_function(
             bcs::to_bytes(&operator_name).unwrap(),
             bcs::to_bytes(&operator_account).unwrap(),
         ],
+    ))
+}
+
+pub fn encode_set_wallet_type_script_function(type_of: u8) -> TransactionPayload {
+    TransactionPayload::ScriptFunction(ScriptFunction::new(
+        ModuleId::new(
+            AccountAddress::new([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
+            Identifier::new("WalletScripts").unwrap(),
+        ),
+        Identifier::new("set_wallet_type").unwrap(),
+        vec![],
+        vec![bcs::to_bytes(&type_of).unwrap()],
     ))
 }
 
@@ -8190,6 +8207,18 @@ fn decode_set_validator_operator_with_nonce_admin_script_function(
     }
 }
 
+fn decode_set_wallet_type_script_function(
+    payload: &TransactionPayload,
+) -> Option<ScriptFunctionCall> {
+    if let TransactionPayload::ScriptFunction(script) = payload {
+        Some(ScriptFunctionCall::SetWalletType {
+            type_of: bcs::from_bytes(script.args().get(0)?).ok()?,
+        })
+    } else {
+        None
+    }
+}
+
 fn decode_tiered_mint_script_function(payload: &TransactionPayload) -> Option<ScriptFunctionCall> {
     if let TransactionPayload::ScriptFunction(script) = payload {
         Some(ScriptFunctionCall::TieredMint {
@@ -8865,6 +8894,10 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<ScriptFunctionDecoderM
         map.insert(
             "ValidatorAdministrationScriptsset_validator_operator_with_nonce_admin".to_string(),
             Box::new(decode_set_validator_operator_with_nonce_admin_script_function),
+        );
+        map.insert(
+            "WalletScriptsset_wallet_type".to_string(),
+            Box::new(decode_set_wallet_type_script_function),
         );
         map.insert(
             "TreasuryComplianceScriptstiered_mint".to_string(),

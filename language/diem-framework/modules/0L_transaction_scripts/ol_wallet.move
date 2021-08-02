@@ -3,7 +3,7 @@ module WalletScripts {
 
     use 0x1::Wallet;
 
-    fun set_wallet_type(sender: signer, type_of: u8) {
+    public(script) fun set_wallet_type(sender: signer, type_of: u8) {
       if (type_of == 0) {
         Wallet::set_slow(&sender);
       };
