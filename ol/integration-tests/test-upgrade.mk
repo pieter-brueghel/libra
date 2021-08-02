@@ -36,11 +36,11 @@ test: prep get-prev stdlib start upgrade check progress stop
 
 start:
 	@echo Building Swarm
-	cd ${SOURCE_PATH} && cargo build -p libra-node -p cli
-	cd ${SOURCE_PATH} && cargo run -p libra-swarm -- --libra-node ${SOURCE_PATH}/target/debug/libra-node -c ${SWARM_TEMP} -n ${NUM_NODES} &> ${LOG}&
+	cd ${SOURCE_PATH} && cargo build -p diem-node -p cli
+	cd ${SOURCE_PATH} && cargo run -p diem-swarm -- --diem-node ${SOURCE_PATH}/target/debug/diem-node -c ${SWARM_TEMP} -n ${NUM_NODES} &> ${LOG}&
 
 stop:
-	killall libra-swarm libra-node miner ol txs cli | true
+	killall diem-swarm diem-node miner ol txs cli | true
 
 prep:
 # save makefile outside of repo, since we'll need it across branches
@@ -82,7 +82,7 @@ END = $(shell date -ud "5 minutes" +%s)
 NOW = $(shell date -u +%s)
 endif
 
-START_TEXT = "To run the Libra CLI client"
+START_TEXT = "To run the Diem CLI client"
 UPGRADE_TEXT = "stdlib upgrade: published"
 
 upgrade: 

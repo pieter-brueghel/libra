@@ -27,7 +27,7 @@ EVE = 3DC18D1CF61FAAC6AC70E3A63F062E4B
 
 ONBOARD_FILE= ${DATA_PATH}/account.json
 
-START_TEXT = "To run the Libra CLI client"
+START_TEXT = "To run the Diem CLI client"
 SUCCESS_TEXT = "User transactions successfully relayed"
 
 export
@@ -41,11 +41,11 @@ swarm:
 	@echo Building Swarm
 	rm -rf ${SWARM_TEMP}
 	mkdir ${SWARM_TEMP}
-	cd ${SOURCE_PATH} && cargo build -p libra-node -p cli
-	cd ${SOURCE_PATH} && NODE_ENV=test TEST=y cargo run -p libra-swarm -- --libra-node ${SOURCE_PATH}/target/debug/libra-node -c ${SWARM_TEMP} -n ${NUM_NODES} &> ${LOG} &
+	cd ${SOURCE_PATH} && cargo build -p diem-node -p cli
+	cd ${SOURCE_PATH} && NODE_ENV=test TEST=y cargo run -p diem-swarm -- --diem-node ${SOURCE_PATH}/target/debug/diem-node -c ${SWARM_TEMP} -n ${NUM_NODES} &> ${LOG} &
 
 stop:
-	killall libra-swarm libra-node miner ol txs cli | true
+	killall diem-swarm diem-node miner ol txs cli | true
 
 init:
 	@echo INIT
