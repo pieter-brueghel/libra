@@ -7,7 +7,7 @@ use ol_types::config::TxType;
 use crate::{entrypoint, submit_tx::{tx_params_wrapper, maybe_submit}};
 use diem_types::transaction::TransactionPayload;
 use diem_transaction_builder::stdlib as transaction_builder;
-use std::{fs, path::PathBuf};
+use std::{fs, path::PathBuf, process::exit};
 
 /// `CreateAccount` subcommand
 #[derive(Command, Debug, Default, Options)]
@@ -46,20 +46,21 @@ impl Runnable for CreateAccountCmd {
         let entry_args = entrypoint::get_args();
         let account_json = self.account_json_path.to_str().unwrap();
         let tx_params = tx_params_wrapper(TxType::Mgmt).unwrap();
-        maybe_submit(
-          create_user_account_script_function(account_json),
-          &tx_params,
-          entry_args.no_send,
-          entry_args.save_path,
-        ).unwrap();
-        // match submit_tx(
-        //     &tx_params, 
-        //     create_user_account_script_function(account_json)
-        // ) {
-        //     Err(err) => { println!("{:?}", err) }
-        //     Ok(res)  => {
-        //         eval_tx_status(res);
-        //     }
-        // }
+
+        match maybe_submit(
+            create_user_account_script_function(account_json),
+            &tx_params,
+            entry_args.no_send,
+            entry_args.save_path,
+          ) {
+            Err(e) => {
+                println!(
+                    "ERROR: could not submit account creation transaction, message: \n{:?}", 
+                    &e
+                );
+                exit(1);
+            },
+            _ => {}
+          }
     }
 }

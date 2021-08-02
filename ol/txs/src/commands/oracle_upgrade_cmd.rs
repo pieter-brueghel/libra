@@ -7,7 +7,7 @@ use ol_types::config::TxType;
 use crate::{entrypoint, prelude::app_config, submit_tx::{tx_params_wrapper, maybe_submit}};
 use diem_types::transaction::TransactionPayload;
 use diem_transaction_builder::stdlib as transaction_builder;
-use std::{fs, io::prelude::*, path::PathBuf};
+use std::{fs, io::prelude::*, path::PathBuf, process::exit};
 
 /// `OracleUpgrade` subcommand
 #[derive(Command, Debug, Default, Options)]
@@ -16,7 +16,7 @@ pub struct OracleUpgradeCmd {
     upgrade_file_path: Option<PathBuf>,
 }
 
-pub fn oracle_tx_script_function(upgrade_file_path: &PathBuf) -> TransactionPayload {
+pub fn oracle_tx_script(upgrade_file_path: &PathBuf) -> TransactionPayload {
     let mut file = fs::File::open(upgrade_file_path)
         .expect("file should open read only");
     let mut buffer = Vec::new();
@@ -29,20 +29,24 @@ pub fn oracle_tx_script_function(upgrade_file_path: &PathBuf) -> TransactionPayl
 impl Runnable for OracleUpgradeCmd {
     fn run(&self) {  
         let entry_args = entrypoint::get_args();
-        let tx_params = tx_params_wrapper(TxType::Critial).unwrap();
+        let tx_params = tx_params_wrapper(TxType::Critical).unwrap();
 
-        let path = if *&self.upgrade_file_path.is_some() {
-            self.upgrade_file_path.clone().unwrap() 
-        } else {
-            let cfg = app_config();
-            cfg.workspace.stdlib_bin_path.clone()
-        };
+        let path = self.upgrade_file_path.clone().unwrap_or_else(|| {
+          let cfg = app_config();
+          cfg.workspace.stdlib_bin_path.clone().unwrap()
+        });
         
-        maybe_submit(
-          oracle_tx_script_function(&path),
+        match maybe_submit(
+          oracle_tx_script(&path),
           &tx_params,
           entry_args.no_send,
           entry_args.save_path
-        ).unwrap();
+        ) {
+            Err(e) => {
+              println!("ERROR: could not submit upgrade transaction, message: \n{:?}", &e);
+              exit(1);
+            },
+            _ => {}
+        }
     }
 }

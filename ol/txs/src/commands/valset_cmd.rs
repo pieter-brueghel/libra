@@ -2,6 +2,7 @@
 
 #![allow(clippy::never_loop)]
 
+use std::process::exit;
 use crate::{
     entrypoint,
     submit_tx::{maybe_submit, tx_params_wrapper},
@@ -19,8 +20,8 @@ pub struct ValSetCmd {
         help = "remove node from validator universe, i.e. cease being a candidate for validator set"
     )]
     leave: bool,
-    // #[options(help = "unjail the node, add to list, and remove jailed designation")]
-    // unjail: bool,
+    #[options(help = "add to val universe")]
+    add: bool,
 }
 
 impl Runnable for ValSetCmd {
@@ -29,20 +30,28 @@ impl Runnable for ValSetCmd {
 
         let tx_params = tx_params_wrapper(TxType::Cheap).unwrap();
         let script = if *&self.join {
-           transaction_builder::encode_join_script_function()
-        } else if *&self.leave {
-           transaction_builder::encode_leave_script_function()
+            transaction_builder::encode_join_script_function()
+        } else if *&self.add {
+            transaction_builder::encode_val_add_self_script_function()
         } else {
-          panic!("need to set --join or --leave flags")
+            panic!("need to set --join or --leave flags")
         };
 
-        maybe_submit(
+        match maybe_submit(
             script,
-            // transaction_builder::encode_demo_e2e_script_function(42),
+            // transaction_builder::encode_demo_e2e_script(42),
             &tx_params,
             entry_args.no_send,
             entry_args.save_path,
-        )
-        .unwrap();
+        ) {
+            Err(e) => {
+              println!(
+                "ERROR: could not submit validator-set transaction, message: \n{:?}", 
+                &e
+              );
+              exit(1);
+            },
+            _ => {}
+        }
     }
 }

@@ -35,6 +35,7 @@ use std::{
     path::PathBuf,
     thread, time,
 };
+
 /// All the parameters needed for a client transaction.
 #[derive(Debug)]
 pub struct TxParams {
@@ -160,6 +161,7 @@ fn stage(
     };
     (signer_account_data, txn)
 }
+
 /// Submit a transaction to the network.
 pub fn submit_tx(
     mut client: DiemClient,
@@ -231,7 +233,9 @@ pub fn tx_params(
             get_oper_params( &config, tx_type, url, waypoint)
         } else {
             // Get from 0L.toml e.g. ~/.0L/0L.toml, or use Profile::default()
-            get_tx_params_from_toml(config.clone(), tx_type, None, url, waypoint).unwrap()
+            get_tx_params_from_toml(
+                config.clone(), tx_type, None, url, waypoint, swarm_path.as_ref().is_some()
+            ).unwrap()
         }
     };
 
@@ -248,7 +252,7 @@ pub fn get_tx_params_from_swarm(
     swarm_persona: String,
     is_operator: bool,
 ) -> Result<TxParams, Error> {
-    let (url, waypoint) = ol_types::config::get_swarm_configs(swarm_path);
+    let (url, waypoint) = ol_types::config::get_swarm_rpc_url(swarm_path);
     let mnem = ol_fixtures::get_persona_mnem(&swarm_persona.as_str());
     let keys = KeyScheme::new_from_mnemonic(mnem);
 
@@ -310,10 +314,7 @@ pub fn get_oper_params(
     let auth_key = AuthenticationKey::ed25519(pubkey);
 
     let waypoint = wp.unwrap_or_else(|| {
-      config
-          .get_waypoint(None)
-          .clone()
-          .expect("could not get waypoint")
+        config.get_waypoint(None).unwrap()
     });
 
     let tx_cost = config.tx_configs.get_cost(tx_type);
@@ -336,6 +337,7 @@ pub fn get_tx_params_from_toml(
     wallet_opt: Option<&WalletLibrary>,
     url: Url,
     wp: Option<Waypoint>,
+    is_swarm: bool,
 ) -> Result<TxParams, Error> {
     // let url = config.profile.default_node.clone().unwrap();
     let (auth_key, address, wallet) = if let Some(wallet) = wallet_opt {
@@ -345,15 +347,20 @@ pub fn get_tx_params_from_toml(
     };
 
     let waypoint = wp.unwrap_or_else(|| {
-        config
-            .get_waypoint(None)
-            .clone()
-            .expect("could not get waypoint")
+        config.get_waypoint(None).unwrap()
     });
 
     let keys = KeyScheme::new_from_mnemonic(wallet.mnemonic());
     let keypair = KeyPair::from(keys.child_0_owner.get_private_key());
     let tx_cost = config.tx_configs.get_cost(tx_type);
+
+    let chain_id = if is_swarm {
+        ChainId::new(4)
+    } else {
+        // main net id
+        ChainId::new(1)
+    };
+    
     let tx_params = TxParams {
         auth_key,
         signer_address: address,
@@ -365,26 +372,28 @@ pub fn get_tx_params_from_toml(
         // max_gas_unit_for_tx: config.tx_configs.management_txs.max_gas_unit_for_tx,
         // coin_price_per_unit: config.tx_configs.management_txs.coin_price_per_unit, // in micro_gas
         // user_tx_timeout: config.tx_configs.management_txs.user_tx_timeout,
-        chain_id: ChainId::new(1),
+        chain_id,
     };
 
     Ok(tx_params)
 }
 
-/// Wait for the response from the libra RPC.
+/// Wait for the response from the diem RPC.
 pub fn wait_for_tx(
     signer_address: AccountAddress,
     sequence_number: u64,
     client: &mut DiemClient,
 ) -> Option<TransactionView> {
     println!(
-        "\nAwaiting tx status \n\
-       Submitted from account: {} with sequence number: {}",
+        "\nAwaiting tx status \nSubmitted from account: {} with sequence number: {}",
         signer_address, sequence_number
     );
 
+    const MAX_ITERATIONS: u8 = 30;
+
+    let mut iter = 0;    
     loop {
-        thread::sleep(time::Duration::from_millis(1000));
+        thread::sleep(time::Duration::from_millis(1_000));
         // prevent all the logging the client does while
         // it loops through the query.
         stdout().flush().unwrap();
@@ -400,6 +409,12 @@ pub fn wait_for_tx(
                 print!(".");
             }
         }
+        iter += 1;
+
+        if iter==MAX_ITERATIONS {
+            println!("Timeout waiting for response");
+            return None;
+        }        
     }
 }
 
