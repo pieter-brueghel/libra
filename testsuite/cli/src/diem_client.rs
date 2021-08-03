@@ -209,7 +209,6 @@ impl DiemClient {
 
     //////// 0L ////////
     /// generate latest waypoint
-    /// generate latest waypoint
     pub fn waypoint(&self) -> Result<Waypoint, Error> {
         match self.latest_epoch_change_li() {
             Some(li) => {
