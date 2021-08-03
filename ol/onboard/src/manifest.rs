@@ -7,7 +7,7 @@ use ol_keys::scheme::KeyScheme;
 
 use diem_types::transaction::SignedTransaction;
 use diem_wallet::WalletLibrary;
-use ol_types::{account::ValConfigs, autopay::PayInstruction};
+use ol_types::{account::ValConfigs, pay_instruction::PayInstruction};
 use std::path::PathBuf;
 use crate::prelude::app_config;
 

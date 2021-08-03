@@ -5,8 +5,8 @@ use abscissa_core::{
     Options, Runnable    
 };
 use std::path::PathBuf;
-use diem_global_constants::NODE_HOME;
 use crate::commands;
+use diem_global_constants::NODE_HOME;
 
 /// Toplevel entrypoint command.
 ///

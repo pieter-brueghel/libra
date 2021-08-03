@@ -5685,6 +5685,7 @@ dependencies = [
  "abscissa_core",
  "anyhow",
  "criterion",
+ "dialoguer",
  "diem-genesis-tool",
  "diem-global-constants",
  "diem-types",
