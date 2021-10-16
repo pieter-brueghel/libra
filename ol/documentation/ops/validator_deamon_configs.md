@@ -19,9 +19,9 @@ There are a few file paths you will be working from:
 
 This will use a `make` recipe to start the node daemon and install the daemon configs.
 
-First. Copy a template for systemd from `<project root>/util/diem-node.system` into your 0L home path, usually `~/.0L`. This is non-root template file needs to be edited: replace occurrences of `<<YOUR USERNAME!>>` with the username under which the service will run.
+First. Copy a template for systemd from `<project root>/ol/util/diem-node.service` into your 0L home path, usually `~/.0L`. This is non-root template file needs to be edited: replace occurrences of `<<YOUR USERNAME!>>` with the username under which the service will run.
 
-BEFORE PROCEEDING: Check you have `~/.0L/diem-node.system` in place and edited with your usename.
+BEFORE PROCEEDING: Check you have `~/.0L/diem-node.service` in place and edited with your usename.
 
 Now the Makefile can do a number of things including coping that file to the usual place, and then (re)starting the service.
 
